@@ -1,0 +1,14 @@
+node_modules/
+.next/
+.next-demo/
+out/
+build/
+# Qualquer variação de .env (inclusive backups tipo .env.local.bak) fica FORA
+# do git — o repositório é público e a chave da API mora nesses arquivos.
+.env*
+!.env.example
+data/
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+.DS_Store

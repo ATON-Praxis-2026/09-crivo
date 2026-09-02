@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chaves do Autopilot</title>
+<meta name="description" content="Guia do time: como criar e cadastrar a chave de API que ativa a pipeline real do Autopilot de Eventos.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ===== Tokens — paleta clara completa no :root ===== */
+  :root {
+    color-scheme: light dark;
+    --ground: #FAFBFA;
+    --surface: #FFFFFF;
+    --ink: #22282E;
+    --muted: #5D6B6A;
+    --accent: #0F6E6B;
+    --accent-ink: #0A5451;
+    --accent-soft: #E5F0EF;
+    --border: #DCE3E1;
+    --warn-ink: #8A5A00;
+    --warn-bg: #F4EAD6;
+    --warn-border: #E3CFA4;
+    --ok: #2F7D46;
+    --code-bg: #1F2A2B;
+    --code-ink: #E4EDEB;
+    --code-muted: #9DB4B1;
+    --shadow: 0 1px 2px rgba(34, 40, 46, 0.05), 0 4px 14px rgba(34, 40, 46, 0.05);
+  }
+
+  /* Preferência do sistema (guarda: não sobrepõe escolha explícita por claro) */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #12181A;
+      --surface: #1A2224;
+      --ink: #E8EDEC;
+      --muted: #9AABA9;
+      --accent: #55B3AE;
+      --accent-ink: #7BC7C2;
+      --accent-soft: #16302F;
+      --border: #2A3538;
+      --warn-ink: #E9BE6E;
+      --warn-bg: #2E2511;
+      --warn-border: #57431C;
+      --ok: #7BC793;
+      --code-bg: #0C1213;
+      --code-ink: #DCE6E4;
+      --code-muted: #8AA09D;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 14px rgba(0, 0, 0, 0.25);
+    }
+  }
+
+  /* Escolha explícita por escuro vence nas duas direções */
+  :root[data-theme="dark"] {
+    --ground: #12181A;
+    --surface: #1A2224;
+    --ink: #E8EDEC;
+    --muted: #9AABA9;
+    --accent: #55B3AE;
+    --accent-ink: #7BC7C2;
+    --accent-soft: #16302F;
+    --border: #2A3538;
+    --warn-ink: #E9BE6E;
+    --warn-bg: #2E2511;
+    --warn-border: #57431C;
+    --ok: #7BC793;
+    --code-bg: #0C1213;
+    --code-ink: #DCE6E4;
+    --code-muted: #8AA09D;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 14px rgba(0, 0, 0, 0.25);
+  }
+
+  /* ===== Base ===== */
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+  }
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem 4rem;
+  }
+  h1, h2, h3 {
+    font-family: "Sora", system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.25;
+    text-wrap: balance;
+    margin: 0;
+  }
+  p { margin: 0 0 0.9rem; max-width: 65ch; }
+  p:last-child { margin-bottom: 0; }
+  a { color: var(--accent); text-underline-offset: 3px; overflow-wrap: anywhere; }
+  a:hover { color: var(--accent-ink); }
+  a:focus-visible,
+  summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+  code {
+    font-family: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 0.875em;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    padding: 0.1em 0.4em;
+    border-radius: 5px;
+    overflow-wrap: anywhere;
+  }
+  strong { font-weight: 600; }
+
+  /* ===== Cabeçalho compacto ===== */
+  .eyebrow {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.6rem;
+  }
+  header h1 {
+    font-size: clamp(1.6rem, 5vw, 2.1rem);
+    font-weight: 700;
+    margin-bottom: 0.7rem;
+  }
+  .lede {
+    color: var(--muted);
+    font-size: 1.05rem;
+    margin-bottom: 0;
+  }
+  .lede strong { color: var(--ink); }
+
+  /* ===== Cards de passo ===== */
+  ol.steps {
+    list-style: none;
+    margin: 2.2rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 1.1rem;
+  }
+  .step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 1.4rem 1.4rem 1.5rem;
+  }
+  .step-head {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 0.9rem;
+  }
+  .step-num {
+    flex: none;
+    width: 2.1rem;
+    height: 2.1rem;
+    display: grid;
+    place-items: center;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    border-radius: 50%;
+    font-family: "Sora", system-ui, sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .step h2 {
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
+  .tag-opcional {
+    display: inline-block;
+    vertical-align: 0.15em;
+    margin-left: 0.5rem;
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 0.1rem 0.55rem;
+  }
+  .step ul {
+    margin: 0 0 0.9rem;
+    padding-left: 1.15rem;
+  }
+  .step li { margin-bottom: 0.45rem; max-width: 62ch; }
+  .step li:last-child { margin-bottom: 0; }
+
+  /* Caminho de clique (breadcrumb) */
+  .crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.5rem;
+    margin: 0 0 0.9rem;
+    font-size: 0.85rem;
+  }
+  .crumbs span {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    border-radius: 6px;
+    padding: 0.2rem 0.6rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .crumbs .sep {
+    background: none;
+    color: var(--muted);
+    padding: 0;
+    font-weight: 400;
+  }
+
+  /* Blocos de comando — painel escuro nos DOIS temas */
+  pre {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    margin: 0 0 0.9rem;
+    overflow-x: auto;
+    font-family: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+  pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+    overflow-wrap: normal;
+  }
+  pre .cmt { color: var(--code-muted); }
+
+  /* Linha "deu certo" */
+  .check {
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+    color: var(--ok);
+    font-weight: 600;
+    font-size: 0.92rem;
+    margin: 0;
+    max-width: 62ch;
+  }
+  .check .mark { flex: none; }
+  .check span:not(.mark) { color: var(--ink); font-weight: 400; }
+  .check b { color: var(--ok); font-weight: 600; }
+
+  /* ===== Callouts ===== */
+  .callout {
+    border-radius: 12px;
+    padding: 1.15rem 1.3rem;
+    margin: 0;
+  }
+  .callout h2 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .callout-custo {
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-border);
+    color: var(--ink);
+  }
+  .callout-custo h2 { color: var(--warn-ink); }
+  .callout-custo strong { color: var(--warn-ink); }
+  .callout-seguranca {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    box-shadow: var(--shadow);
+  }
+  .callout-seguranca h2 { color: var(--accent); }
+  .callout-receita {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--ok);
+    box-shadow: var(--shadow);
+  }
+  .callout-receita h2 { color: var(--ok); }
+  .callout ul { margin: 0; padding-left: 1.15rem; }
+  .callout li { margin-bottom: 0.4rem; max-width: 62ch; }
+  .callout li:last-child { margin-bottom: 0; }
+
+  /* ===== Troubleshooting ===== */
+  .trouble { margin-top: 2.4rem; }
+  .trouble > h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.9rem;
+  }
+  details {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 0.6rem;
+  }
+  details[open] { border-color: var(--accent); }
+  summary {
+    cursor: pointer;
+    padding: 0.8rem 1.1rem;
+    font-weight: 600;
+    list-style-position: inside;
+  }
+  summary::marker { color: var(--accent); }
+  details .body {
+    padding: 0 1.1rem 1rem;
+    color: var(--ink);
+  }
+  details .body p { max-width: 62ch; }
+
+  footer {
+    margin-top: 2.8rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 420px) {
+    main { padding: 1.8rem 1rem 3rem; }
+    .step { padding: 1.1rem 1rem 1.2rem; }
+    .callout { padding: 1rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation: none !important;
+      transition: none !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">Autopilot de Eventos · Guia do time</p>
+    <h1>Chaves do Autopilot</h1>
+    <p class="lede">Boa notícia: só existe <strong>uma chave</strong> para configurar — a da Anthropic, que ativa o Claude com busca web. A consulta de CNPJ usa a BrasilAPI, que é <strong>gratuita e sem chave</strong> (nada a fazer). Siga os passos na ordem: cada um diz onde clicar e como saber que deu certo.</p>
+  </header>
+
+  <ol class="steps">
+    <!-- PASSO 1 -->
+    <li class="step">
+      <div class="step-head">
+        <span class="step-num" aria-hidden="true">1</span>
+        <h2>Criar a chave no console da Anthropic</h2>
+      </div>
+      <ul>
+        <li>Acesse <a href="https://console.anthropic.com">console.anthropic.com</a> e entre — ou crie uma conta, se ainda não tiver. Se o endereço virar <code>platform.claude.com</code>, está tudo certo: é o mesmo console, que mudou de endereço.</li>
+        <li>No menu lateral, siga este caminho (ou vá direto para <a href="https://console.anthropic.com/settings/keys">console.anthropic.com/settings/keys</a>):</li>
+      </ul>
+      <div class="crumbs" aria-label="Caminho de cliques no console">
+        <span>Settings</span><span class="sep" aria-hidden="true">→</span>
+        <span>API Keys</span><span class="sep" aria-hidden="true">→</span>
+        <span>Create Key</span>
+      </div>
+      <ul>
+        <li>Dê um nome para a chave — por exemplo, <code>autopilot-aton</code>.</li>
+        <li><strong>Copie a chave</strong> (começa com <code>sk-ant-</code>). Ela aparece <strong>uma única vez</strong>: guarde em um local seguro, como um gerenciador de senhas.</li>
+        <li>Ainda no console, confira se a conta tem créditos em <strong>Settings → Billing</strong> — a API é pré-paga; sem crédito, a chave não funciona.</li>
+      </ul>
+      <p class="check"><b class="mark" aria-hidden="true">✓</b><span><b>Deu certo quando:</b> a chave aparece na lista de API Keys com o nome que você deu — e a cópia está guardada com você.</span></p>
+    </li>
+
+    <!-- PASSO 2 -->
+    <li class="step">
+      <div class="step-head">
+        <span class="step-num" aria-hidden="true">2</span>
+        <h2>Cadastrar no app local (arquivo .env)</h2>
+      </div>
+      <ul>
+        <li>Abra o PowerShell na pasta <code>autopilot</code> do projeto (no Explorador de Arquivos, entre na pasta, digite <code>powershell</code> na barra de endereço e aperte Enter) e copie o modelo de configuração:</li>
+      </ul>
+      <pre><code>Copy-Item .env.example .env</code></pre>
+      <ul>
+        <li>Abra o arquivo <code>.env</code> em qualquer editor (o Bloco de Notas serve) e cole a sua chave logo depois do sinal de igual:</li>
+      </ul>
+      <pre><code>ANTHROPIC_API_KEY=sk-ant-<span class="cmt">…cole-a-sua-chave-aqui…</span></code></pre>
+      <ul>
+        <li>Salve o arquivo. As outras linhas do <code>.env</code> (<code>DATA_STORE</code>, <code>NEXT_PUBLIC_DEFAULT_CITY</code>, <code>MODEL_…</code>) são opcionais — pode deixar como estão.</li>
+        <li>Reinicie o servidor: no terminal onde o app roda, aperte <code>Ctrl+C</code> e rode de novo:</li>
+      </ul>
+      <pre><code>npm run dev</code></pre>
+      <p class="check"><b class="mark" aria-hidden="true">✓</b><span><b>Deu certo quando:</b> o servidor sobe sem erro e o terminal mostra <code>http://localhost:3000</code>.</span></p>
+    </li>
+
+    <!-- PASSO 3 -->
+    <li class="step">
+      <div class="step-head">
+        <span class="step-num" aria-hidden="true">3</span>
+        <h2>Conferir que a pipeline real ativou</h2>
+      </div>
+      <ul>
+        <li>Abra <a href="http://localhost:3000">http://localhost:3000</a> no navegador.</li>
+        <li>Repare no topo da tela: o banner de <strong>modo demonstração</strong> deve ter sumido. Não há mais nenhum ajuste a fazer — com a chave no lugar, a pipeline real (Claude + BrasilAPI) ativa sozinha.</li>
+      </ul>
+      <p class="check"><b class="mark" aria-hidden="true">✓</b><span><b>Deu certo quando:</b> o banner de demonstração não aparece mais e uma pesquisa nova traz fornecedores reais, com evidências clicáveis.</span></p>
+    </li>
+
+    <!-- CALLOUT DE CUSTO -->
+    <li class="callout callout-custo" aria-label="Aviso de custo">
+      <h2>Atenção ao custo</h2>
+      <p>Cada ranking real de 10 fornecedores custa <strong>cerca de US$&nbsp;1,50 a US$&nbsp;2,50</strong> — são ~70 a 90 buscas na web por rodada. O app já limita as buscas por agente (8 no Descobridor, 6 no Verificador, 4 no Refinador), mas rode o modo real com intenção: para treinar apresentação, use o passo 4 e não gaste nada.</p>
+    </li>
+
+    <!-- CALLOUT RECEITA/CNPJ -->
+    <li class="callout callout-receita" aria-label="Consulta à Receita Federal">
+      <h2>E a chave da Receita Federal?</h2>
+      <p><strong>Não existe — e isso é de propósito.</strong> A consulta de CNPJ (situação cadastral, data de abertura, CNAE, porte) sai da <strong>BrasilAPI</strong>, um serviço público e gratuito que <strong>não pede chave, cadastro nem configuração</strong>. O app já chama <code>brasilapi.com.br/api/cnpj/v1/…</code> sozinho, com espera e retentativa automáticas. Ou seja: com a chave da Anthropic do passo 1 no lugar, <strong>o sistema inteiro está completo</strong> — não procure uma segunda chave, ela não existe.</p>
+    </li>
+
+    <!-- PASSO 4 -->
+    <li class="step">
+      <div class="step-head">
+        <span class="step-num" aria-hidden="true">4</span>
+        <h2>Ensaiar sem gastar (MOCK_MODE)</h2>
+      </div>
+      <ul>
+        <li>Quer treinar o pitch sem consumir créditos? No <code>.env</code>, acrescente (ou descomente, tirando o <code>#</code>) esta linha:</li>
+      </ul>
+      <pre><code>MOCK_MODE=true</code></pre>
+      <ul>
+        <li>Salve o arquivo e reinicie o servidor (<code>Ctrl+C</code> e <code>npm run dev</code>). A linha força o modo demonstração <strong>mesmo com a chave cadastrada</strong> — o app roda a mesma jornada com dados simulados, de graça.</li>
+        <li>Para voltar ao modo real: apague a linha (ou devolva o <code>#</code> na frente), salve e reinicie o servidor de novo.</li>
+      </ul>
+      <p class="check"><b class="mark" aria-hidden="true">✓</b><span><b>Deu certo quando:</b> o banner de demonstração volta a aparecer — sinal de que nenhuma busca paga está sendo feita.</span></p>
+    </li>
+
+    <!-- PASSO 5 -->
+    <li class="step">
+      <div class="step-head">
+        <span class="step-num" aria-hidden="true">5</span>
+        <h2>Ativar na Vercel <span class="tag-opcional">opcional</span></h2>
+      </div>
+      <ul>
+        <li>A demo pública <a href="https://autopilot-eventos-demo.vercel.app">autopilot-eventos-demo.vercel.app</a> roda em modo demonstração <strong>de propósito</strong>. Se um dia o time quiser o modo real também lá:</li>
+      </ul>
+      <div class="crumbs" aria-label="Caminho de cliques na Vercel">
+        <span>Painel da Vercel</span><span class="sep" aria-hidden="true">→</span>
+        <span>projeto autopilot-eventos-demo</span><span class="sep" aria-hidden="true">→</span>
+        <span>Settings</span><span class="sep" aria-hidden="true">→</span>
+        <span>Environment Variables</span>
+      </div>
+      <ul>
+        <li>Adicione a variável <code>ANTHROPIC_API_KEY</code>, cole o valor da chave e salve.</li>
+        <li>Depois clique em <strong>Redeploy</strong> para a mudança valer.</li>
+        <li><strong>Limitação atual:</strong> o modo real só é suportado oficialmente no computador local. Na Vercel o app guarda o andamento da pesquisa em memória (sem banco), e uma pesquisa real pode se perder no meio do caminho — a troca por banco de produção está no roadmap (veja o README).</li>
+        <li><strong>Recomendação do time:</strong> manter a demo pública em modo demonstração (qualquer pessoa pode acessá-la e gerar custo) e usar o modo real só localmente, na hora do pitch.</li>
+      </ul>
+      <p class="check"><b class="mark" aria-hidden="true">✓</b><span><b>Deu certo quando:</b> após o redeploy, o banner de demonstração some no endereço público — mas, se uma pesquisa real travar lá, é a limitação de memória acima, não a sua chave.</span></p>
+    </li>
+
+    <!-- CARD DE SEGURANÇA -->
+    <li class="callout callout-seguranca" aria-label="Regras de segurança">
+      <h2>Segurança da chave</h2>
+      <ul>
+        <li>O <code>.env</code> <strong>nunca vai para o git</strong> — ele já está no <code>.gitignore</code> do projeto. Não mude isso.</li>
+        <li>Não cole a chave em chats, prints, slides ou documentos compartilhados.</li>
+        <li>Se ela vazar: revogue no console da Anthropic (<strong>Settings → API Keys</strong>), crie outra e atualize o <code>.env</code>.</li>
+      </ul>
+    </li>
+  </ol>
+
+  <section class="trouble">
+    <h2>Se algo der errado</h2>
+
+    <details>
+      <summary>Apareceu "erro 401" ou "authentication error"</summary>
+      <div class="body">
+        <p>A chave está errada, incompleta ou foi revogada. Volte ao console da Anthropic, crie uma chave nova (passo 1), cole de novo no <code>.env</code> (passo 2) e reinicie o servidor.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Erro falando de créditos ou billing</summary>
+      <div class="body">
+        <p>A conta está sem saldo — a API é pré-paga. No console da Anthropic, abra <strong>Settings → Billing</strong> e adicione créditos. A mesma chave volta a funcionar em seguida.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>O banner de demonstração não some</summary>
+      <div class="body">
+        <p>O app só lê o <code>.env</code> quando o servidor sobe. Pare com <code>Ctrl+C</code> e rode <code>npm run dev</code> de novo. Se ainda assim não sumir, confira se a linha <code>MOCK_MODE=true</code> não ficou ativa no <code>.env</code> — ela força o modo demonstração de propósito.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Consulta de CNPJ falhou (BrasilAPI)</summary>
+      <div class="body">
+        <p>A BrasilAPI é um serviço público e às vezes oscila. Tente de novo: o app já espera e retenta sozinho (backoff automático). Não há chave nem configuração a ajustar aqui.</p>
+      </div>
+    </details>
+  </section>
+
+  <footer>
+    <p>Guia do time · Autopilot de Eventos (grupo09). Dúvidas sobre a pipeline: veja <code>docs/arquitetura.md</code> no projeto.</p>
+  </footer>
+</main>
+</body>
+</html>
